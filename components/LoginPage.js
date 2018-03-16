@@ -7,8 +7,17 @@ import {
     Button,
     Alert,
     TouchableOpacity,
-    AsyncStorage
+    AsyncStorage,
+    ActivityIndicator
 } from 'react-native';
+
+import {
+    baseUrl
+} from './../constants/api';
+
+import {
+    isTokenValid
+} from './../helpers/auth';
 
 import styles from './../styles/Styles';
 
@@ -31,6 +40,12 @@ export default class LoginPage extends Component  {
         headerLeft: null
     };
 
+    componentDidMount() {
+        if(isTokenValid) {
+            this.props.navigation.navigate('Products');
+        }
+    }
+
     async SaveToken (key, value) {
         try {
             await AsyncStorage.setItem(key, value);
@@ -40,6 +55,7 @@ export default class LoginPage extends Component  {
     }
 
     Authenticate = () => {
+        let user = null;
         if(this.state.email == null || this.state.email.length == 0) {
             this.setState({
                 isFormValid: false,
@@ -75,18 +91,26 @@ export default class LoginPage extends Component  {
                 });
                 if(responseJson.success) {
                     this.setState({
-                        isLoading: false
+                        isFormValid: true,
+                        isLoading: false,
+                        errorMessage: ''
                     });
                     // Save api token to asyncstorage
-                    this.SaveToken('User', responseJson);
-
-                    // Redirect to ProductListPage
+                    user = responseJson.message;
+                    this.SaveToken('Token', responseJson.api_token);
                 } else {
                     this.setState({
+                        isFormValid: false,
                         isLoading: false,
                         errorMessage: 'Invalid email / password combination'
                     });
                 }
+            })
+            .then(() => {
+                this.SaveToken('User', JSON.stringify(user));
+            })
+            .then(() => {
+                this.props.navigation.navigate('Products');
             })
             .catch((error) => {
                 console.error(error);
@@ -107,6 +131,14 @@ export default class LoginPage extends Component  {
     }
 
     render() {
+        if(this.state.isLoading) {
+            return (
+                <View style={{ flex: 1, paddingTop: 20 }}>
+                    <ActivityIndicator />
+                </View>
+            );
+        }
+        
         return(
             <View style={styles.FormContainer}>
                 <Text style={{fontSize: 20, marginRight: 25, textAlign: 'center', marginBottom: 7}}>
@@ -123,11 +155,12 @@ export default class LoginPage extends Component  {
                         })
                     }
                     onSubmitEditing={(event) => { 
-                        this.refs.txtDescription.focus(); 
+                        this.refs.txtPassword.focus(); 
                     }}
                     value={this.state.email} />
                     
                 <TextInput
+                    ref='txtPassword'
                     placeholder='Password'
                     secureTextEntry={true}
                     style={styles.TextInputStyleClass}
@@ -137,9 +170,6 @@ export default class LoginPage extends Component  {
                             password: value
                         })
                     }
-                    onSubmitEditing={(event) => { 
-                        this.refs.txtQuantity.focus(); 
-                    }}
                     value={this.state.password} />
 
                 {this.renderError()}

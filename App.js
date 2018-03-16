@@ -1,9 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
 import React, { Component } from 'react';
 
 import {
@@ -25,31 +19,35 @@ import LoginPage from './components/LoginPage';
 import { updateFocus, getCurrentRouteKey } from 'react-navigation-is-focused-hoc'
 
 const StackNavigation = new StackNavigator({
-  Login: {
-    screen: LoginPage
-  },
   Products: {
     screen: Tabs
+  },
+  Login: {
+    screen: LoginPage
   }
 });
 
 export default class App extends Component {
   render() {
-    let result = AsyncStorage.getItem('User').then((user) => {
-        if(user == null || user == undefined) {
-          return null;
+    /*const apiToken = AsyncStorage.getItem('Token').then((token) => {
+        if(token != null && token != undefined) {
+          return token;
         } else {
-          return user;
+          return null;
         }
     });
-
-    if(result != null && result != undefined) {
-        return <Tabs
-                  onNavigationStateChange={(prevState, currentState) => {
-                    updateFocus(currentState)
-                  }} />;
+    
+    if(apiToken != null) {
+      return <Tabs 
+            onNavigationStateChange={(prevState, currentState) => {
+              updateFocus(currentState)
+            }} />;
     } else {
-        return <LoginPage />;
-    }
+      return <LoginPage />;
+    }*/
+    return <StackNavigation 
+            onNavigationStateChange={(prevState, currentState) => {
+              updateFocus(currentState)
+            }} />;
   }
 }

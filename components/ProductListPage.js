@@ -8,11 +8,18 @@ import {
     Text,
     Alert,
     TextInput,
-    SearchBox
+    SearchBox,
+    AsyncStorage
 } from 'react-native';
 
+import {
+    baseUrl
+} from './../constants/api';
 import styles from '../styles/Styles';
 import { withNavigationFocus } from 'react-navigation-is-focused-hoc'
+import {
+    isTokenValid
+} from './../helpers/auth';
 
 class ProductListPage extends React.Component {
     constructor(props) {
@@ -25,7 +32,7 @@ class ProductListPage extends React.Component {
             loadMore: false,
             page: 0,
             pageSize: 10,
-            keyword: ''
+            keyword: '',
         };
     }
 
@@ -53,33 +60,64 @@ class ProductListPage extends React.Component {
     };
 
     LoadProducts = () => {
-        let tempPage = this.state.page + 1;
-        let url = 'http://api.rotimonas.com/v1/products/paginate/'+ tempPage.toString() +'/'+ this.state.pageSize.toString();
-        if(this.state.keyword.length > 0) {
-            url = url + '?q=' + this.state.keyword;
-        }
-        return fetch(url)
-            .then((response) => response.json())
-            .then((responseJson) => {
-                if(responseJson.length > 0) {
-                    this.setState({
-                        loading: false,
-                        loadMore: false,
-                        refreshing: false,
-                        data: (this.state.page === 0) ? responseJson : [...this.state.data, ...responseJson],
-                        page: (this.state.page === 0) ? 1 : (this.state.page + 1)
-                    });
-                } else {
-                    this.setState({
-                        loading: false,
-                        loadMore: false,
-                        refreshing: false
-                    });
+        AsyncStorage.getItem('Token').then((apiToken) => {
+            if(apiToken != null && apiToken != undefined) {
+                let tempPage = this.state.page + 1;
+                let url =  'http://api.rotimonas.com/v1/products/paginate/'+ tempPage.toString() + '/' + this.state.pageSize.toString();
+                if(this.state.keyword.length > 0) {
+                    url = url + '?q=' + this.state.keyword;
                 }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+                if(url.indexOf('?') >= 0) {
+                    url = url + '&api_token=' + apiToken
+                } else {
+                    url = url + '?api_token=' + apiToken;
+                }
+
+                return fetch(url)
+                    .then((response) => response.json())
+                    .then((responseJson) => {
+                        if(responseJson.length > 0) {
+                            this.setState({
+                                loading: false,
+                                loadMore: false,
+                                refreshing: false,
+                                data: (this.state.page === 0) ? responseJson : [...this.state.data, ...responseJson],
+                                page: (this.state.page === 0) ? 1 : (this.state.page + 1)
+                            });
+                        } else {
+                            if(responseJson.message != undefined) {
+                                // If the token had been expired
+                                if(responseJson.message.indexOf('not allowed') >= 0) {
+                                    // Sign the user out
+                                    AsyncStorage.removeItem('User');
+                                    AsyncStorage.removeItem('Token');
+
+                                    // Navigate user to the sign in screen
+                                    Alert.alert('Your session has expired. Please login first.');
+                                    this.props.navigation.navigate('Login');
+                                } else {
+                                    this.setState({
+                                        loading: false,
+                                        loadMore: false,
+                                        refreshing: false
+                                    });
+                                }
+                            } else {
+                                this.setState({
+                                    loading: false,
+                                    loadMore: false,
+                                    refreshing: false
+                                });
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            } else {
+                this.props.navigation.navigate('Login');
+            }
+        });
     }
 
     Refresh = () => {
