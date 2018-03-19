@@ -10,7 +10,13 @@ import {
 } from 'react-native';
 
 import styles from './../styles/Styles';
-import { withNavigationFocus } from 'react-navigation-is-focused-hoc'
+import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
+import baseUrl from './../constants/api';
+import {
+    isTokenValid,
+    logout
+} from './../helpers/auth';
+
 
 class ProductDetailPage extends Component  {
     constructor(props) {
@@ -118,8 +124,22 @@ class ProductDetailPage extends Component  {
         )
     }
 
+    clearState = () => {
+        this.setState({
+            productId: '',
+            productName: '',
+            description: '',
+            quantity: 0,
+            price: 0.00,
+            isLoading: false
+        });
+    }
+
     Back = () => {
-        this.props.navigation.navigate('ProductList');
+        this.clearState();
+        this.props.navigation.navigate('ProductList', {
+            from: 'ProductDetail'
+        });
     }
 
     render() {

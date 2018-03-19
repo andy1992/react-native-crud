@@ -25,6 +25,8 @@ const StackNavigation = new StackNavigator({
   Login: {
     screen: LoginPage
   }
+}, {
+  headerMode: 'none'
 });
 
 export default class App extends Component {

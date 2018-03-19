@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 
 import {
     TabNavigator,
-    StackNavigator
+    StackNavigator,
+    Icon
 } from 'react-navigation';
 
 import ProductListPage from './../components/ProductListPage';
@@ -21,6 +22,10 @@ const AddProductNavigation = StackNavigator({
   ProductAdd: { screen: ProductAddPage }
 });
 
+const ProfileNavigation = StackNavigator({
+  Profile: { screen: ProfilePage }
+})
+
 export default Tabs = TabNavigator({
   List: {
     screen: StackNavigation,
@@ -37,12 +42,14 @@ export default Tabs = TabNavigator({
     },
   },
   Profile: {
-    screen: ProfilePage,
+    screen: ProfileNavigation,
     navigationOptions: {
       tabBarLabel: 'Profile',
       tabBarIcon: ({ tintColor }) => <Icon name="user" size={35} color={tintColor} />
     },
   }
 }, {
-  animationEnabled: true
+  animationEnabled: true,
+  showIcon: true,
+  tabBarPosition: 'top'
 });

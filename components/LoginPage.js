@@ -41,9 +41,19 @@ export default class LoginPage extends Component  {
     };
 
     componentDidMount() {
-        if(isTokenValid) {
-            this.props.navigation.navigate('Products');
-        }
+        AsyncStorage.getItem('Token').then((token) => {
+            return fetch('http://api.rotimonas.com/v1/products/paginate/1/1?api_token=' + token)
+            .then((response) => response.json())
+            .then((responseJson) => {
+                if(responseJson.message != undefined) {
+                    if(responseJson.message.indexOf('not allowed') >= 0) {
+                    } else {
+                        this.props.navigation.navigate('Products');
+                    }
+                } else
+                    this.props.navigation.navigate('Products');
+            });
+        });
     }
 
     async SaveToken (key, value) {
@@ -141,7 +151,7 @@ export default class LoginPage extends Component  {
         
         return(
             <View style={styles.FormContainer}>
-                <Text style={{fontSize: 20, marginRight: 25, textAlign: 'center', marginBottom: 7}}>
+                <Text style={{fontSize: 20, marginRight: 25, textAlign: 'center', marginBottom: 7, marginTop: '50%'}}>
                     Sign In   
                 </Text>
 

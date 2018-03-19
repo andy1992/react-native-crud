@@ -12,13 +12,12 @@ import {
     AsyncStorage
 } from 'react-native';
 
-import {
-    baseUrl
-} from './../constants/api';
 import styles from '../styles/Styles';
-import { withNavigationFocus } from 'react-navigation-is-focused-hoc'
+import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
+import baseUrl from './../constants/api';
 import {
-    isTokenValid
+    isTokenValid,
+    logout
 } from './../helpers/auth';
 
 class ProductListPage extends React.Component {
@@ -36,14 +35,36 @@ class ProductListPage extends React.Component {
         };
     }
 
+    static navigationOptions = {
+        title: 'All Products',
+        headerLeft: null
+    };
+
     componentDidMount() {
-        this.LoadProducts();
+        isTokenValid().then((value) => {
+            if(!value) {
+                logout();
+                this.props.navigation.navigate('Login');
+            } else {
+                // Only run Load Products when screen is loaded first time (not coming from other screen)
+                if(this.props.navigation.state.params == undefined || this.props.navigation.state.params == null) {
+                    this.LoadProducts();
+                }
+            }
+        });
     }    
     
     componentWillReceiveProps(nextProps) {
         if (!this.props.isFocused && nextProps.isFocused) {
             // screen enter (refresh data, update ui ...)
-            this.Refresh();
+            isTokenValid().then((value) => {
+                if(!value) {
+                    logout();
+                    this.props.navigation.navigate('Login');
+                } else {
+                    this.Refresh();
+                }
+            });
         }
         if (this.props.isFocused && !nextProps.isFocused) {
             // screen exit
@@ -54,16 +75,11 @@ class ProductListPage extends React.Component {
         return true;
     }
 
-    static navigationOptions = {
-        title: 'All Products',
-        headerLeft: null
-    };
-
     LoadProducts = () => {
         AsyncStorage.getItem('Token').then((apiToken) => {
             if(apiToken != null && apiToken != undefined) {
                 let tempPage = this.state.page + 1;
-                let url =  'http://api.rotimonas.com/v1/products/paginate/'+ tempPage.toString() + '/' + this.state.pageSize.toString();
+                let url =  baseUrl + '/products/paginate/'+ tempPage.toString() + '/' + this.state.pageSize.toString();
                 if(this.state.keyword.length > 0) {
                     url = url + '?q=' + this.state.keyword;
                 }
@@ -82,39 +98,21 @@ class ProductListPage extends React.Component {
                                 loadMore: false,
                                 refreshing: false,
                                 data: (this.state.page === 0) ? responseJson : [...this.state.data, ...responseJson],
-                                page: (this.state.page === 0) ? 1 : (this.state.page + 1)
+                                page: this.state.page + 1
                             });
                         } else {
-                            if(responseJson.message != undefined) {
-                                // If the token had been expired
-                                if(responseJson.message.indexOf('not allowed') >= 0) {
-                                    // Sign the user out
-                                    AsyncStorage.removeItem('User');
-                                    AsyncStorage.removeItem('Token');
-
-                                    // Navigate user to the sign in screen
-                                    Alert.alert('Your session has expired. Please login first.');
-                                    this.props.navigation.navigate('Login');
-                                } else {
-                                    this.setState({
-                                        loading: false,
-                                        loadMore: false,
-                                        refreshing: false
-                                    });
-                                }
-                            } else {
-                                this.setState({
-                                    loading: false,
-                                    loadMore: false,
-                                    refreshing: false
-                                });
-                            }
+                            this.setState({
+                                loading: false,
+                                loadMore: false,
+                                refreshing: false
+                            });
                         }
                     })
                     .catch((error) => {
                         console.error(error);
                     });
             } else {
+                logout();
                 this.props.navigation.navigate('Login');
             }
         });
@@ -125,6 +123,7 @@ class ProductListPage extends React.Component {
             page: 0,
             data: [],
             refreshing: true,
+            loading: false,
             keyword: ''
         }, () => {
             this.LoadProducts();
@@ -235,7 +234,7 @@ class ProductListPage extends React.Component {
                         }
                         return null;
                     }}
-                    onEndReachedThreshold='0.1'
+                    onEndReachedThreshold='0.3'
                 />
             </View>
         );

@@ -18,6 +18,10 @@ export default class ProfilePage extends React.Component {
         }
     }
 
+    static navigationOptions = {
+        title: 'Profile'
+    };
+
     componentDidMount() {
         AsyncStorage.getItem('User').then((user) => {
             if(user != null && user != undefined) {

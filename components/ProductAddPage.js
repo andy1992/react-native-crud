@@ -6,11 +6,17 @@ import {
     TextInput,
     Button,
     Alert,
-    TouchableOpacity
+    TouchableOpacity,
+    AsyncStorage
 } from 'react-native';
 
 import styles from './../styles/Styles';
 import { withNavigationFocus } from 'react-navigation-is-focused-hoc'
+import baseUrl from './../constants/api';
+import {
+    isTokenValid,
+    logout
+} from './../helpers/auth';
 
 class ProductAddPage extends Component  {
     constructor(props) {
@@ -26,6 +32,19 @@ class ProductAddPage extends Component  {
             apiResult: '',
             isLoading: false
         }
+    }
+
+    validateToken = () => {
+        isTokenValid().then((value) => {
+            if(!value) {
+                logout();
+                this.props.navigation.navigate('Login');
+            }
+        });
+    }
+
+    componentDidMount() {
+        this.validateToken();
     }
 
     static navigationOptions = {
@@ -145,6 +164,7 @@ class ProductAddPage extends Component  {
         if (!this.props.isFocused && nextProps.isFocused) {
             // screen enter (refresh data, update ui ...)
             this.ClearState();
+            this.validateToken();
         }
         if (this.props.isFocused && !nextProps.isFocused) {
             // screen exit
@@ -159,7 +179,6 @@ class ProductAddPage extends Component  {
         return(
             <View style={styles.FormContainer}>
                 <Text style={{fontSize: 20, marginRight: 25, textAlign: 'center', marginBottom: 7}}>
-                    Add New Product   
                 </Text>
 
                 <TextInput
