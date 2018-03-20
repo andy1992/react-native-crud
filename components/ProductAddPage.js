@@ -133,7 +133,9 @@ class ProductAddPage extends Component  {
 
     Back = () => {
         this.ClearState();
-        this.props.navigation.navigate('List');
+        this.props.navigation.navigate('List', {
+            from: 'ProductAddPage'
+        });
     }
 
     renderError = () => {

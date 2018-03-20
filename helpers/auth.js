@@ -31,5 +31,4 @@ function fetchFirst(token) {
 export function logout() {
     AsyncStorage.removeItem('User');
     AsyncStorage.removeItem('Token');
-    Alert.alert('Your session has been expired. Please sign in.');
 }

@@ -108,6 +108,7 @@ export default class LoginPage extends Component  {
                     // Save api token to asyncstorage
                     user = responseJson.message;
                     this.SaveToken('Token', responseJson.api_token);
+                    this.SaveToken('JustLoggedIn', 'true');
                 } else {
                     this.setState({
                         isFormValid: false,
@@ -120,7 +121,8 @@ export default class LoginPage extends Component  {
                 this.SaveToken('User', JSON.stringify(user));
             })
             .then(() => {
-                this.props.navigation.navigate('Products');
+                // Set Flag to indicate user just logged in
+                this.props.navigation.navigate('List');
             })
             .catch((error) => {
                 console.error(error);

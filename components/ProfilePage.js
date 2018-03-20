@@ -6,6 +6,10 @@ import {
     View,
     AsyncStorage
 } from 'react-native';
+import {
+    isTokenValid,
+    logout
+} from './../helpers/auth';
 
 import styles from './../styles/Styles';
 
@@ -23,29 +27,40 @@ export default class ProfilePage extends React.Component {
     };
 
     componentDidMount() {
-        AsyncStorage.getItem('User').then((user) => {
-            if(user != null && user != undefined) {
-                const userObject = JSON.parse(user);
-                this.setState({
-                    email: userObject.email
-                });
+        isTokenValid().then((value) => {
+            console.log(value);
+            if(!value) {
+                logout();
+                this.props.navigation.navigate('Login');
             } else {
-                this.setState({
-                    email: 'unidentified@mail.com'
+                AsyncStorage.getItem('User').then((user) => {
+                    if(user != null && user != undefined) {
+                        const userObject = JSON.parse(user);
+                        this.setState({
+                            email: userObject.email
+                        });
+                    } else {
+                        logout();
+                    }
                 });
             }
         });
     }
 
     Logout = () => {
-        AsyncStorage.removeItem('Token');
-        AsyncStorage.removeItem('User');
+        logout();
         this.props.navigation.navigate('Login');
     }
 
     render() {
         return <View style={styles.FormContainer}>
-                    <Text>{this.state.email}</Text>
+                    <Text
+                    style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginTop: 20,
+                        marginBottom: 10
+                    }}>Hi, {this.state.email}</Text>
                     <TouchableOpacity 
                         activeOpacity = { .4 } 
                         style={styles.TouchableOpacityStyle} 

@@ -42,13 +42,23 @@ class ProductListPage extends React.Component {
 
     componentDidMount() {
         isTokenValid().then((value) => {
+            console.log(value);
             if(!value) {
                 logout();
                 this.props.navigation.navigate('Login');
             } else {
                 // Only run Load Products when screen is loaded first time (not coming from other screen)
                 if(this.props.navigation.state.params == undefined || this.props.navigation.state.params == null) {
-                    this.LoadProducts();
+                    this.setState({
+                        page: 0,
+                        keyword: '',
+                        data: []
+                    }, () => {
+                        console.log(this.state);
+                        this.LoadProducts();
+                    });
+                } else {
+                    console.log(this.props.navigation.state.params);
                 }
             }
         });
@@ -62,7 +72,12 @@ class ProductListPage extends React.Component {
                     logout();
                     this.props.navigation.navigate('Login');
                 } else {
-                    this.Refresh();
+                    AsyncStorage.getItem('JustLoggedIn').then((value) => {
+                        if(value == undefined || value == null)
+                            this.Refresh();
+                        else
+                            AsyncStorage.removeItem('JustLoggedIn');
+                    });
                 }
             });
         }
@@ -122,8 +137,8 @@ class ProductListPage extends React.Component {
         this.setState({
             page: 0,
             data: [],
-            refreshing: true,
-            loading: false,
+            refreshing: false,
+            loading: true,
             keyword: ''
         }, () => {
             this.LoadProducts();

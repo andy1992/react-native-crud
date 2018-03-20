@@ -138,7 +138,7 @@ class ProductDetailPage extends Component  {
     Back = () => {
         this.clearState();
         this.props.navigation.navigate('ProductList', {
-            from: 'ProductDetail'
+            from: 'ProductDetailPage'
         });
     }
 

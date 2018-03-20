@@ -1,1 +1,1 @@
-export default baseUrl = 'http://api.rotimonas.com/v1';
+export default baseUrl = 'https://api.rotimonas.com/v1';
