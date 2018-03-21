@@ -28,7 +28,6 @@ export default class ProfilePage extends React.Component {
 
     componentDidMount() {
         isTokenValid().then((value) => {
-            console.log(value);
             if(!value) {
                 logout();
                 this.props.navigation.navigate('Login');

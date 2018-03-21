@@ -7,11 +7,17 @@ import {
     Button,
     Alert,
     TouchableOpacity,
-    ActivityIndicator
+    ActivityIndicator,
+    AsyncStorage
 } from 'react-native';
 
 import styles from './../styles/Styles';
-import { withNavigationFocus } from 'react-navigation-is-focused-hoc'
+import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
+import baseUrl from './../constants/api';
+import {
+    isTokenValid,
+    logout
+} from './../helpers/auth';
 
 class ProductEditPage extends Component  {
     constructor(props) {
@@ -25,7 +31,8 @@ class ProductEditPage extends Component  {
             price: 0.00,
             errorMessage: '',
             isFormValid: true,
-            apiResult: ''
+            apiResult: '',
+            token: ''
         }
     }
 
@@ -34,13 +41,29 @@ class ProductEditPage extends Component  {
         headerLeft: null
     };
 
+    validateToken = () => {
+        isTokenValid().then((value) => {
+            if(!value) {
+                logout();
+                this.props.navigation.navigate('Login');
+            }
+        });
+    }
+
     componentDidMount(){
+        this.validateToken();
         this.setState({
             productId: this.props.navigation.state.params.productId,
             productName: this.props.navigation.state.params.productName,
             description: this.props.navigation.state.params.description,
             quantity: this.props.navigation.state.params.quantity,
             price: this.props.navigation.state.params.price,
+        });
+        
+        AsyncStorage.getItem('Token').then((apiToken) => {
+            this.setState({
+                token: apiToken
+            });
         });
     }
 
@@ -113,7 +136,7 @@ class ProductEditPage extends Component  {
                 isLoading: true
             });
 
-            fetch('http://api.rotimonas.com/v1/products/' + this.state.productId.toString(), {
+            fetch(baseUrl + '/products/' + this.state.productId.toString() + '?api_token=' + this.state.token, {
                 method: 'PUT',
                 headers: {
                     'Accept': 'application/json',

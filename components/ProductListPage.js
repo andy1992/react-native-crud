@@ -17,7 +17,8 @@ import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
 import baseUrl from './../constants/api';
 import {
     isTokenValid,
-    logout
+    logout,
+    getToken
 } from './../helpers/auth';
 
 class ProductListPage extends React.Component {
@@ -32,6 +33,7 @@ class ProductListPage extends React.Component {
             page: 0,
             pageSize: 10,
             keyword: '',
+            shouldRefresh: false
         };
     }
 
@@ -52,10 +54,15 @@ class ProductListPage extends React.Component {
                     this.setState({
                         page: 0,
                         keyword: '',
-                        data: []
+                        data: [],
+                        shouldRefresh: true
                     }, () => {
-                        console.log(this.state);
-                        this.LoadProducts();
+                        AsyncStorage.getItem('JustLoggedIn').then((value) => {
+                            if(value != undefined && value != null) {
+                                console.log('loadproducts in componentDidMount called, page: ' + this.state.page);
+                                this.LoadProducts();
+                            }
+                        });
                     });
                 } else {
                     console.log(this.props.navigation.state.params);
@@ -73,10 +80,16 @@ class ProductListPage extends React.Component {
                     this.props.navigation.navigate('Login');
                 } else {
                     AsyncStorage.getItem('JustLoggedIn').then((value) => {
-                        if(value == undefined || value == null)
-                            this.Refresh();
-                        else
+                        if(value == undefined || value == null) {
+                            if(this.state.shouldRefresh || (this.props.navigation.state.params != undefined && this.props.navigation.state.params != null)) {
+                                this.Refresh();   
+                                console.log('refresh in componentWillReceiveProps called, page: ' + this.state.page);
+                            }
+                        } else {
                             AsyncStorage.removeItem('JustLoggedIn');
+                            console.log('JustLoggedIn has been removed from AsyncStorage');
+                        }
+                            
                     });
                 }
             });
@@ -91,13 +104,14 @@ class ProductListPage extends React.Component {
     }
 
     LoadProducts = () => {
-        AsyncStorage.getItem('Token').then((apiToken) => {
-            if(apiToken != null && apiToken != undefined) {
+        getToken().then((apiToken) => {
+            if(apiToken != undefined && apiToken != null) {
                 let tempPage = this.state.page + 1;
                 let url =  baseUrl + '/products/paginate/'+ tempPage.toString() + '/' + this.state.pageSize.toString();
                 if(this.state.keyword.length > 0) {
                     url = url + '?q=' + this.state.keyword;
                 }
+                
                 if(url.indexOf('?') >= 0) {
                     url = url + '&api_token=' + apiToken
                 } else {

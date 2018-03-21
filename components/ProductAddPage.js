@@ -7,11 +7,12 @@ import {
     Button,
     Alert,
     TouchableOpacity,
+    ActivityIndicator,
     AsyncStorage
 } from 'react-native';
 
 import styles from './../styles/Styles';
-import { withNavigationFocus } from 'react-navigation-is-focused-hoc'
+import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
 import baseUrl from './../constants/api';
 import {
     isTokenValid,
@@ -30,7 +31,8 @@ class ProductAddPage extends Component  {
             errorMessage: '',
             isFormValid: true,
             apiResult: '',
-            isLoading: false
+            isLoading: false,
+            token: ''
         }
     }
 
@@ -45,6 +47,11 @@ class ProductAddPage extends Component  {
 
     componentDidMount() {
         this.validateToken();
+        AsyncStorage.getItem('Token').then((apiToken) => {
+            this.setState({
+                token: apiToken
+            });
+        });
     }
 
     static navigationOptions = {
@@ -90,7 +97,7 @@ class ProductAddPage extends Component  {
                 isLoading: true
             });
 
-            fetch('http://api.rotimonas.com/v1/products', {
+            fetch(baseUrl + '/products?api_token=' + this.state.token, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -122,10 +129,16 @@ class ProductAddPage extends Component  {
                         cancelable: false
                     });
                 } else {
+                    this.setState({
+                        isLoading: false
+                    });
                     Alert.alert('Failed to save product');
                 }
             })
             .catch((error) => {
+                this.setState({
+                    isLoading: false
+                });
                 console.error(error);
             });
         }
@@ -178,6 +191,14 @@ class ProductAddPage extends Component  {
     }
 
     render() {
+        if(this.state.isLoading) {
+            return (
+                <View style={{ flex: 1, paddingTop: 20 }}>
+                    <ActivityIndicator />
+                </View>
+            );
+        }
+
         return(
             <View style={styles.FormContainer}>
                 <Text style={{fontSize: 20, marginRight: 25, textAlign: 'center', marginBottom: 7}}>
@@ -195,7 +216,7 @@ class ProductAddPage extends Component  {
                     onSubmitEditing={(event) => { 
                         this.refs.txtDescription.focus(); 
                     }}
-                    value={this.state.product_name} />
+                    value={this.state.productName} />
                     
                 <TextInput
                     ref='txtDescription'

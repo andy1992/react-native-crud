@@ -6,7 +6,8 @@ import {
     Text,
     Alert,
     TouchableOpacity,
-    ActivityIndicator
+    ActivityIndicator,
+    AsyncStorage
 } from 'react-native';
 
 import styles from './../styles/Styles';
@@ -46,8 +47,24 @@ class ProductDetailPage extends Component  {
         return true;
     }
 
+    validateToken = () => {
+        isTokenValid().then((value) => {
+            if(!value) {
+                logout();
+                this.props.navigation.navigate('Login');
+            }
+        });
+    }
+
     componentDidMount(){
+        this.validateToken();
         this.PopulateFields();
+        
+        AsyncStorage.getItem('Token').then((apiToken) => {
+            this.setState({
+                token: apiToken
+            });
+        });
     }
 
     PopulateFields = () => {
@@ -85,7 +102,7 @@ class ProductDetailPage extends Component  {
                         this.setState({
                             isLoading: true
                         });
-                        fetch('http://api.rotimonas.com/v1/products/' + this.state.productId.toString(), {
+                        fetch(baseUrl + '/products/' + this.state.productId.toString() + '?api_token=' + this.state.token, {
                             method: 'Delete',
                             headers: {
                                 'Accept': 'application/json',

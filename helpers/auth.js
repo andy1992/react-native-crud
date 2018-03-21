@@ -32,3 +32,9 @@ export function logout() {
     AsyncStorage.removeItem('User');
     AsyncStorage.removeItem('Token');
 }
+
+export function getToken() {
+    return AsyncStorage.getItem('Token').then((apiToken) => {
+        return apiToken;
+    });
+}
